@@ -56,3 +56,12 @@ The previous path finder summed percentage changes between different assets and 
 The product now remains a simulation: round-trip paths compound conversion rates and a simulated fee, manual paths compare USD-equivalent values from one market snapshot, fake transaction recording/auth gates are removed, and provider calls are bounded/validated.
 
 No financial transaction, exchange account action, credential mutation, merge or production promotion was performed.
+
+## 2026-09-23 verification refresh
+
+- Runtime head remains `799a41a21e74eff538815b1bb819e300bdfef4d8`; no new P0/P1 was found in the inspected market-data and conversion-calculation paths.
+- GitHub Quality run `35700095487`: **SUCCESS** — install, contracts, typecheck, lint and build executed.
+- Netlify exact-head deploy-preview status: **SUCCESS**.
+- The UI remains an explicit simulation with no trading, custody, fake login or transaction-history claims.
+
+Status remains **PARTIAL** for live-market/browser resilience testing, not for transaction execution. Keep Draft; no financial action or production promotion.
