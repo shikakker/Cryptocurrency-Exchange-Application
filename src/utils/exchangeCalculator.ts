@@ -1,73 +1,79 @@
 import { CryptoPrice } from '../types';
 
-interface PathStep {
+export interface PathStep {
   fromCrypto: CryptoPrice;
   toCrypto: CryptoPrice;
   rate: number;
-  profitPercentage: number;
+  inputAmount: number;
+  outputAmount: number;
 }
 
-interface TradingPath {
+export interface TradingPath {
   steps: PathStep[];
-  totalProfitPercentage: number;
+  totalReturnPercentage: number;
+}
+
+const SIMULATED_FEE_RATE = 0.001;
+
+function validMarket(crypto: CryptoPrice) {
+  return Number.isFinite(crypto.current_price) && crypto.current_price > 0;
+}
+
+function conversionRate(from: CryptoPrice, to: CryptoPrice) {
+  return from.current_price / to.current_price;
 }
 
 export const findBestTradingPaths = (
   cryptos: CryptoPrice[],
-  maxSteps: number = 5,
-  minProfitPercentage: number = 0.1
+  maxSteps = 4,
+  minReturnPercentage = 0.1,
 ): TradingPath[] => {
+  const markets = cryptos.filter(validMarket);
   const paths: TradingPath[] = [];
-  
-  const calculateRate = (from: CryptoPrice, to: CryptoPrice): number => {
-    return from.current_price / to.current_price;
-  };
 
-  const findPaths = (
-    currentPath: PathStep[],
-    currentCrypto: CryptoPrice,
-    initialPrice: number,
-    visited: Set<string>
-  ) => {
-    if (currentPath.length >= maxSteps) {
-      return;
-    }
+  for (const start of markets) {
+    const walk = (
+      current: CryptoPrice,
+      amount: number,
+      steps: PathStep[],
+      visited: Set<string>,
+    ) => {
+      if (steps.length >= maxSteps) return;
 
-    for (const toCrypto of cryptos) {
-      if (visited.has(toCrypto.id)) continue;
+      for (const next of markets) {
+        const closesCycle = next.id === start.id;
+        if (!closesCycle && visited.has(next.id)) continue;
+        if (closesCycle && steps.length === 0) continue;
 
-      const rate = calculateRate(currentCrypto, toCrypto);
-      const currentValue = initialPrice * rate;
-      const profitPercentage = ((currentValue - initialPrice) / initialPrice) * 100;
+        const rate = conversionRate(current, next);
+        const outputAmount = amount * rate * (1 - SIMULATED_FEE_RATE);
+        const nextStep: PathStep = {
+          fromCrypto: current,
+          toCrypto: next,
+          rate,
+          inputAmount: amount,
+          outputAmount,
+        };
+        const nextSteps = [...steps, nextStep];
 
-      const step: PathStep = {
-        fromCrypto: currentCrypto,
-        toCrypto,
-        rate,
-        profitPercentage
-      };
+        if (closesCycle) {
+          const totalReturnPercentage = (outputAmount - 1) * 100;
+          if (totalReturnPercentage > minReturnPercentage) {
+            paths.push({ steps: nextSteps, totalReturnPercentage });
+          }
+          continue;
+        }
 
-      const newPath = [...currentPath, step];
-      const totalProfit = newPath.reduce((acc, step) => acc + step.profitPercentage, 0);
-
-      if (totalProfit > minProfitPercentage) {
-        paths.push({
-          steps: newPath,
-          totalProfitPercentage: totalProfit
-        });
+        visited.add(next.id);
+        walk(next, outputAmount, nextSteps, visited);
+        visited.delete(next.id);
       }
+    };
 
-      visited.add(toCrypto.id);
-      findPaths(newPath, toCrypto, currentValue, visited);
-      visited.delete(toCrypto.id);
-    }
-  };
-
-  cryptos.forEach(startCrypto => {
-    findPaths([], startCrypto, startCrypto.current_price, new Set([startCrypto.id]));
-  });
+    walk(start, 1, [], new Set([start.id]));
+  }
 
   return paths
-    .sort((a, b) => b.totalProfitPercentage - a.totalProfitPercentage)
+    .sort((a, b) => b.totalReturnPercentage - a.totalReturnPercentage)
     .slice(0, 10);
 };
