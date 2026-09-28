@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ExchangePath, ExchangeStep } from '../types';
+import { ExchangePath } from '../types';
 
 interface ExchangeState {
   currentPath: ExchangePath | null;
