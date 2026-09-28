@@ -1,3 +1,16 @@
+## 2026-09-28 — ambiguous market ticker fix
+
+- Exact code head before this documentation commit: `06c9b4fd31babc83b4d11ccfc4d3f282482fb69a`.
+- CoinGecko rows are now normalized to one deterministic market per ticker symbol before the symbol-based conversion lookup, preventing duplicate symbols from resolving to a different asset than the user selected.
+- Empty id/name/symbol rows are rejected alongside invalid prices.
+- Regression contract added.
+- GitHub Quality run `36417183424`: **SUCCESS**.
+- Exact-head Netlify deploy-preview status: **SUCCESS**.
+- Hosted browser smoke could not be reached from the available browser channel, so Browser QA is **NOT VERIFIED** rather than falsely marked PASS.
+- Status: **PARTIAL**.
+
+---
+
 # Product Completion Status — Crypto Conversion Simulator
 
 Canonical repository: `shikakker/Cryptocurrency-Exchange-Application`  
