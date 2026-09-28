@@ -13,14 +13,26 @@ export const getCryptoPrices = async (): Promise<CryptoPrice[]> => {
     throw new Error('INVALID_MARKET_DATA');
   }
 
-  return response.data.filter((item): item is CryptoPrice =>
-    Boolean(
-      item &&
-      typeof item.id === 'string' &&
-      typeof item.symbol === 'string' &&
-      typeof item.name === 'string' &&
-      Number.isFinite(item.current_price) &&
-      item.current_price > 0,
-    ),
-  );
+  const seenSymbols = new Set<string>();
+
+  return response.data
+    .filter((item): item is CryptoPrice =>
+      Boolean(
+        item &&
+        typeof item.id === 'string' &&
+        item.id.trim() &&
+        typeof item.symbol === 'string' &&
+        item.symbol.trim() &&
+        typeof item.name === 'string' &&
+        item.name.trim() &&
+        Number.isFinite(item.current_price) &&
+        item.current_price > 0,
+      ),
+    )
+    .filter((item) => {
+      const symbol = item.symbol.trim().toLowerCase();
+      if (seenSymbols.has(symbol)) return false;
+      seenSymbols.add(symbol);
+      return true;
+    });
 };
