@@ -39,3 +39,11 @@ test('market provider call is bounded and response shape is validated', () => {
   assert.match(api, /Array\.isArray\(response\.data\)/);
   assert.match(api, /Number\.isFinite\(item\.current_price\)/);
 });
+
+
+test('market snapshot removes duplicate ticker symbols before symbol-based conversion lookup', () => {
+  assert.match(api, /const seenSymbols = new Set<string>\(\)/);
+  assert.match(api, /const symbol = item\.symbol\.trim\(\)\.toLowerCase\(\)/);
+  assert.match(api, /seenSymbols\.has\(symbol\)/);
+  assert.match(api, /seenSymbols\.add\(symbol\)/);
+});
